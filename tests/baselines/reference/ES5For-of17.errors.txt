@@ -7,6 +7,7 @@ tests/cases/conformance/statements/for-ofStatements/ES5For-of17.ts(3,20): error 
         for (let v of [v]) {
                        ~
 !!! error TS2448: Block-scoped variable 'v' used before its declaration.
+!!! (i) tests/cases/conformance/statements/for-ofStatements/ES5For-of17.ts(3,14): error TS2728: 'v' was declared here.
             var x = v;
             v++;
         }

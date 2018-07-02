@@ -5,6 +5,7 @@ tests/cases/compiler/classOrder2.ts(1,17): error TS2449: Class 'B' used before i
     class A extends B {
                     ~
 !!! error TS2449: Class 'B' used before its declaration.
+!!! (i) tests/cases/compiler/classOrder2.ts(7,7): error TS2728: 'B' was declared here.
     
       foo() { this.bar(); }
     

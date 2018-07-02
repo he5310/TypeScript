@@ -5,6 +5,7 @@ tests/cases/compiler/file1.ts(1,1): error TS2448: Block-scoped variable 'c' used
     c;
     ~
 !!! error TS2448: Block-scoped variable 'c' used before its declaration.
+!!! (i) tests/cases/compiler/file2.ts(1,7): error TS2728: 'c' was declared here.
     
 ==== tests/cases/compiler/file2.ts (0 errors) ====
     const c = 0;

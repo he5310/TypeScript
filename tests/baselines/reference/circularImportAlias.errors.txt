@@ -9,6 +9,7 @@ tests/cases/conformance/internalModules/importDeclarations/circularImportAlias.t
         export class D extends a.C {
                                  ~
 !!! error TS2449: Class 'C' used before its declaration.
+!!! (i) tests/cases/conformance/internalModules/importDeclarations/circularImportAlias.ts(11,18): error TS2728: 'C' was declared here.
             id: number;
         }
     }

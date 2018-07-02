@@ -45,6 +45,7 @@ tests/cases/conformance/classes/classDeclarations/classAbstractKeyword/classAbst
     var x : any = C;
                   ~
 !!! error TS2449: Class 'C' used before its declaration.
+!!! (i) tests/cases/conformance/classes/classDeclarations/classAbstractKeyword/classAbstractInstantiations2.ts(26,7): error TS2728: 'C' was declared here.
     new x; // okay -- undefined behavior at runtime
     
     class C extends B { } // error -- not declared abstract

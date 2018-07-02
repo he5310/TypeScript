@@ -6,9 +6,11 @@ tests/cases/compiler/genericClassInheritsConstructorFromNonGenericClass.ts(2,20)
     class A extends B<string> { }
                     ~
 !!! error TS2449: Class 'B' used before its declaration.
+!!! (i) tests/cases/compiler/genericClassInheritsConstructorFromNonGenericClass.ts(2,7): error TS2728: 'B' was declared here.
     class B<U> extends C { }
                        ~
 !!! error TS2449: Class 'C' used before its declaration.
+!!! (i) tests/cases/compiler/genericClassInheritsConstructorFromNonGenericClass.ts(3,7): error TS2728: 'C' was declared here.
     class C {
         constructor(p: string) { }
     }
