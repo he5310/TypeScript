@@ -1113,6 +1113,8 @@ namespace Harness {
             { name: "fullEmitPaths", type: "boolean" }
         ];
 
+        const diagnosticHost = { getCanonicalFileName, getCurrentDirectory: () => "", getNewLine: () => IO.newLine() };
+
         let optionsIndex: ts.Map<ts.CommandLineOption>;
         function getCommandLineOption(name: string): ts.CommandLineOption | undefined {
             if (!optionsIndex) {
@@ -1315,8 +1317,7 @@ namespace Harness {
         }
 
         export function minimalDiagnosticsToString(diagnostics: ReadonlyArray<ts.Diagnostic>, pretty?: boolean) {
-            const host = { getCanonicalFileName, getCurrentDirectory: () => "", getNewLine: () => IO.newLine() };
-            return (pretty ? ts.formatDiagnosticsWithColorAndContext : ts.formatDiagnostics)(diagnostics, host);
+            return (pretty ? ts.formatDiagnosticsWithColorAndContext : ts.formatDiagnostics)(diagnostics, diagnosticHost);
         }
 
         export function getErrorBaseline(inputFiles: ReadonlyArray<TestFile>, diagnostics: ReadonlyArray<ts.Diagnostic>, pretty?: boolean) {
@@ -1349,14 +1350,12 @@ namespace Harness {
             }
 
             function outputErrorText(error: ts.Diagnostic) {
-                const message = ts.flattenDiagnosticMessageText(error.messageText, IO.newLine());
-
-                const errLines = utils.removeTestPathPrefixes(message)
-                    .split("\n")
-                    .map(s => s.length > 0 && s.charAt(s.length - 1) === "\r" ? s.substr(0, s.length - 1) : s)
-                    .filter(s => s.length > 0)
-                    .map(s => "!!! " + ts.diagnosticCategoryName(error) + " TS" + error.code + ": " + s);
-                errLines.forEach(e => outputLines += (newLine() + e));
+                outputError(/*isRelatedError*/ false, error);
+                if (error.relatedInformation) {
+                    for (const relErr of error.relatedInformation) {
+                        outputError(/*isRelatedError*/ true, relErr);
+                    }
+                }
                 errorsReported++;
 
                 // do not count errors from lib.d.ts here, they are computed separately as numLibraryDiagnostics
@@ -1367,6 +1366,23 @@ namespace Harness {
                 if (!error.file || !isDefaultLibraryFile(error.file.fileName)) {
                     totalErrorsReportedInNonLibraryFiles++;
                 }
+            }
+
+            function outputError(isRelatedError: boolean, error: ts.Diagnostic) {
+                const message = ts.flattenDiagnosticMessageText(error.messageText, IO.newLine());
+                let suffix = "!!! ";
+                if (isRelatedError) {
+                    const file = ts.Debug.assertDefined(error.file);
+                    const { line, character } = ts.getLineAndCharacterOfPosition(file, error.start!);
+                    const fileName = utils.removeTestPathPrefixes(file.fileName);
+                    suffix += `(i) ${fileName}(${line + 1},${character + 1}): `;
+                }
+                const errLines = utils.removeTestPathPrefixes(message)
+                    .split("\n")
+                    .map(s => s.length > 0 && s.charAt(s.length - 1) === "\r" ? s.substr(0, s.length - 1) : s)
+                    .filter(s => s.length > 0)
+                    .map(s => suffix + ts.diagnosticCategoryName(error) + " TS" + error.code + ": " + s);
+                errLines.forEach(e => outputLines += (newLine() + e));
             }
 
             yield [diagnosticSummaryMarker, utils.removeTestPathPrefixes(minimalDiagnosticsToString(diagnostics, options && options.pretty)) + IO.newLine() + IO.newLine(), diagnostics.length];
@@ -1419,8 +1435,7 @@ namespace Harness {
                     }
                     // Emit this line from the original file
                     outputLines += (newLine() + "    " + line);
-                    fileErrors.forEach(errDiagnostic => {
-                        const err = errDiagnostic as ts.TextSpan; // TODO: GH#18217
+                    fileErrors.forEach(err => {
                         // Does any error start or continue on to this line? Emit squiggles
                         const end = ts.textSpanEnd(err);
                         if ((end >= thisLineStart) && ((err.start < nextLineStart) || (lineIndex === lines.length - 1))) {
@@ -1438,7 +1453,7 @@ namespace Harness {
                                 // Just like above, we need to do a split on a string instead of on a regex
                                 // because the JS engine does regexes wrong
 
-                                outputErrorText(errDiagnostic);
+                                outputErrorText(err);
                                 markedErrorCount++;
                             }
                         }
